@@ -29,9 +29,9 @@ def load_data(file_path):
 
 def get_biggest_bar(json_content):
     try:
-        biggest_bar = max(json_content['features'],
-                           key=lambda x:
-                           x['properties']['Attributes']['SeatsCount'])
+        biggest_bar = \
+            max(json_content['features'],
+                key=lambda x: x['properties']['Attributes']['SeatsCount'])
         return biggest_bar['properties']['Attributes']
     except IndexError:
         return None
@@ -40,8 +40,8 @@ def get_biggest_bar(json_content):
 def get_smallest_bar(json_content):
     try:
         small_bars = min(json_content['features'],
-                           key=lambda x:
-                           x['properties']['Attributes']['SeatsCount'])
+                         key=lambda x:
+                         x['properties']['Attributes']['SeatsCount'])
         return small_bars['properties']['Attributes']
     except IndexError:
         return None
@@ -74,8 +74,11 @@ def get_closest_bar(json_content, longitude, latitude):
                               (math.radians(math.fabs(longitude -
                                                       coordinate_bar[0]))))
                 distance_bars.append(distance)
-                index_min_distance_bar = distance_bars.index(min(distance_bars))
-            return json_content['features'][index_min_distance_bar]['properties']['Attributes'], min(distance_bars)
+                index_min_distance_bar = \
+                    distance_bars.index(min(distance_bars))
+            return json_content['features']
+            [index_min_distance_bar]['properties']
+            ['Attributes'], min(distance_bars)
         else:
             return None
     except IndexError:
