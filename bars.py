@@ -1,115 +1,104 @@
 import json
-import sys
 import argparse
 import math
-import pprint
 
 
 # Парсим параметры командной строки
-def parser_argv():
+def get_argv():
     parser = argparse.ArgumentParser(description='Информация о барах Москвы')
-    parser.add_argument("-f", "--file", default=["bars.json"],
-                        nargs=1, help="путь до файла")
-    parser.add_argument("-l", "--location", nargs=2,
+    parser.add_argument('-f', '--file', default='bars.json',
+                        help="путь до файла")
+    parser.add_argument('-l', '--location', nargs=2,
                         help="долгота, широта Вашего"
                              " местонахождения в десятичной форме", type=float)
-    return parser.parse_args()
+    return parser.parse_args().file, parser.parse_args().location
 
 
 def load_data(file_path):
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             json_content = f.read()
-            return json.loads(json_content)
-    except FileNotFoundError:
-        return None
-    except AttributeError:
+            return json.loads(json_content)['features']
+    except (FileNotFoundError, AttributeError):
         return None
 
 
 def get_biggest_bar(json_content):
     try:
-        biggest_bar = \
-            max(json_content['features'],
-                key=lambda x: x['properties']['Attributes']['SeatsCount'])
-        return biggest_bar['properties']['Attributes']
+        biggest_bar = max(
+            json_content,
+            key=lambda x:
+            x['properties']['Attributes']['SeatsCount']
+        )
+        return biggest_bar['properties']['Attributes']['Name']
+    # Сработает если JSON имеет отличные от указанных в коде ключи
     except IndexError:
         return None
 
 
 def get_smallest_bar(json_content):
     try:
-        small_bars = min(json_content['features'],
+        small_bars = min(json_content,
                          key=lambda x:
                          x['properties']['Attributes']['SeatsCount'])
-        return small_bars['properties']['Attributes']
+        return small_bars['properties']['Attributes']['Name']
+    # Сработает если JSON имеет отличные от указанных в коде ключи
     except IndexError:
         return None
 
 
-# Определение ближайшего бара.Формула для расчета:
-# l=earth_radius * arcos(sin (latitude1)*sin (latitude2)+
-# +cos(latitude1)*cos(latitude2)*cos(longitude1-longitude2)
-# noinspection PyUnreachableCode
+# ССылка на формулу для расчета растояния:
+# https://ru.wikipedia.org/wiki/Сфера
+def get_distance_bar(longitude, latitude, longitude_bar, latitude_bar):
+    # Широта должна быть от 0 до 90;
+    # Долгота должна быть от 0 до 180.
+    if longitude < 180 and latitude < 90:
+        earth_radius = 6372795
+        cos_latitude = math.cos(math.radians(latitude))
+        sin_latitude = math.sin(math.radians(latitude))
+        cos_latitude_bar = math.cos(math.radians(latitude_bar))
+        sin_latitude_bar = math.sin(math.radians(latitude_bar))
+        distance = earth_radius * math.acos(
+            sin_latitude * sin_latitude_bar + cos_latitude * cos_latitude_bar * math.cos(
+                math.radians(abs(longitude - longitude_bar))))
+        return distance
+    else:
+        return None
+
+
 def get_closest_bar(json_content, longitude, latitude):
     try:
-        # noinspection PyUnreachableCode
-        if longitude < 180 and latitude < 90:
-            earth_radius = 6372795
-            cos_latitude = math.cos(math.radians(latitude))
-            sin_latitude = math.sin(math.radians(latitude))
-            coordinates = [x['geometry']['coordinates']
-                           for x in json_content['features']]
-            distance_bars = []
-            # В цикле находим растояние до баров
-            for coordinate_bar in coordinates:
-                radians_coordinate_bar = [math.radians(x)
-                                          for x in coordinate_bar]
-                sin_latitude_bar = math.sin(radians_coordinate_bar[1])
-                cos_latitude_bar = math.cos(radians_coordinate_bar[1])
-
-                distance = earth_radius *\
-                    math.acos(sin_latitude * sin_latitude_bar +
-                              cos_latitude * cos_latitude_bar * math.cos
-                              (math.radians(math.fabs(longitude -
-                                                      coordinate_bar[0]))))
-                distance_bars.append(distance)
-                index_min_distance_bar = \
-                    distance_bars.index(min(distance_bars))
-            return json_content['features']
-            [index_min_distance_bar]['properties']
-            ['Attributes'], min(distance_bars)
-        else:
-            return None
-    except IndexError:
+        closest_bar = min(
+            json_content, key=lambda x: get_distance_bar(
+                longitude, latitude, float(x['geometry']['coordinates'][0]),
+                float(x['geometry']['coordinates'][1])
+            ))
+        return closest_bar['properties']['Attributes']['Name']
+    # Сработает если ключи не совпадут или координаты не цифра
+    except (IndexError, ValueError):
         return None
 
 
 if __name__ == '__main__':
-    file_path = parser_argv().file[0]
+    file_path, location = get_argv()
     json_content = load_data(file_path)
     if json_content:
         smallest_bar = get_smallest_bar(json_content)
         biggest_bar = get_biggest_bar(json_content)
         if smallest_bar and biggest_bar:
-            print("\n Самый маленький бар:")
-            pprint.pprint(smallest_bar)
-            print("\n Cамый большой бар:")
-            pprint.pprint(biggest_bar)
+            print('Самый маленький бар: "{0}"'.format(smallest_bar))
+            print('Cамый большой бар: "{0}"'.format(biggest_bar))
         else:
-            print("Не могу прочитать. Неправильный формат данных")
+            print('Не могу прочитать. Неправильный формат данных')
     else:
-        print("По указанному пути нет файла в формате json")
-    if parser_argv().location:
-        longitude, latitude = parser_argv().location
+        print('По указанному пути нет файла в формате json')
+    if location:
+        longitude, latitude = location
         closest_bar = get_closest_bar(json_content, longitude, latitude)
         if closest_bar:
-            print("\nСамый близкий бар:")
-            pprint.pprint(closest_bar[0])
-            print("\n Расстояние до бара {} метров \n".
-                  format(int(closest_bar[1])))
+            print('Самый близкий бар: "{0}"'.format(closest_bar))
         else:
-            print("ВВедены неверные координаты")
+            print('ВВедены неверные координаты')
     else:
-        print ("Вы не ввели координаты!")
-    print("Программа завершина.")
+        print ('Вы не ввели координаты!')
+    print('Программа завершина.')
