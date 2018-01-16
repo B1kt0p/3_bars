@@ -50,8 +50,8 @@ def get_smallest_bar(json_content):
 # ССылка на формулу для расчета растояния:
 # https://ru.wikipedia.org/wiki/Сфера
 def get_distance_bar(longitude, latitude, longitude_bar, latitude_bar):
-    # Широта должна быть от 0 до 90;
-    # Долгота должна быть от 0 до 180.
+    # Широта должна быть от 0 до 90
+    # Долгота должна быть от 0 до 180
     if longitude < 180 and latitude < 90:
         earth_radius = 6372795
         cos_latitude = math.cos(math.radians(latitude))
