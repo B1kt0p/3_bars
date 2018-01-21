@@ -26,7 +26,7 @@ def load_data(file_path):
         with open(file_path, 'r', encoding='utf-8') as file:
             json_content = file.read()
             return json.loads(json_content)['features']
-    except (FileNotFoundError, AttributeError):
+    except FileNotFoundError:
         return None
 
 
@@ -47,13 +47,13 @@ def get_smallest_bar(bars):
 
 
 def get_distance_bar(longitude, latitude, longitude_bar, latitude_bar):
+    # ССылка на формулу для расчета растояния:
+    # https://ru.wikipedia.org/wiki/Сфера
     earth_radius = 6372795
     cos_latitude = math.cos(math.radians(latitude))
     sin_latitude = math.sin(math.radians(latitude))
     cos_latitude_bar = math.cos(math.radians(latitude_bar))
     sin_latitude_bar = math.sin(math.radians(latitude_bar))
-    # ССылка на формулу для расчета растояния:
-    # https://ru.wikipedia.org/wiki/Сфера
     distance = earth_radius * math.acos(
         sin_latitude * sin_latitude_bar + cos_latitude * cos_latitude_bar * math.cos(
             math.radians(abs(longitude - longitude_bar))
