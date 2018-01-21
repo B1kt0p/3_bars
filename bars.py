@@ -9,13 +9,13 @@ def get_argv():
         '-f',
         '--file',
         default='bars.json',
-        help="путь до файла"
+        help='путь до файла'
     )
     parser.add_argument(
         '-l',
         '--location',
         nargs=2,
-        help="долгота, широта Вашего местонахождения в десятичной форме",
+        help='долгота, широта Вашего местонахождения в десятичной форме',
         type=float
     )
     return parser.parse_args()
@@ -35,7 +35,7 @@ def get_biggest_bar(bars):
         bars,
         key=lambda x: x['properties']['Attributes']['SeatsCount']
     )
-    return biggest_bar['properties']['Attributes']['Name']
+    return biggest_bar['properties']
 
 
 def get_smallest_bar(bars):
@@ -43,7 +43,7 @@ def get_smallest_bar(bars):
         bars,
         key=lambda x: x['properties']['Attributes']['SeatsCount']
     )
-    return small_bars['properties']['Attributes']['Name']
+    return small_bars['properties']
 
 
 def get_distance_bar(longitude, latitude, longitude_bar, latitude_bar):
@@ -63,8 +63,6 @@ def get_distance_bar(longitude, latitude, longitude_bar, latitude_bar):
 
 
 def get_closest_bar(bars, longitude, latitude):
-    # Широта должна быть от 0 до 90
-    # Долгота должна быть от 0 до 180
     if longitude < 180 and latitude < 90:
         closest_bar = min(
             bars,
@@ -75,24 +73,24 @@ def get_closest_bar(bars, longitude, latitude):
                 x['geometry']['coordinates'][1]
             )
         )
-        return closest_bar['properties']['Attributes']['Name']
+        return closest_bar['properties']
     else:
         return None
 
 
 if __name__ == '__main__':
-    parse = get_argv()
-    bars = load_data(parse.file)
+    argv = get_argv()
+    bars = load_data(argv.file)
     if bars:
-        smallest_bar = get_smallest_bar(bars)
-        biggest_bar = get_biggest_bar(bars)
-        print('Самый маленький бар: "{0}"'.format(smallest_bar))
-        print('Cамый большой бар: "{0}"'.format(biggest_bar))
-        if parse.location:
-            longitude, latitude = parse.location
-            closest_bar = get_closest_bar(bars, longitude, latitude)
-            if closest_bar:
-                print('Самый близкий бар: "{0}"'.format(closest_bar))
+        name_smallest_bar = get_smallest_bar(bars)['Attributes']['Name']
+        name_biggest_bar = get_biggest_bar(bars)['Attributes']['Name']
+        print('Самый маленький бар: "{0}"'.format(name_smallest_bar))
+        print('Cамый большой бар: "{0}"'.format(name_biggest_bar))
+        if argv.location:
+            longitude, latitude = argv.location
+            name_closest_bar = get_closest_bar(bars, longitude, latitude)['Attributes']['Name']
+            if name_closest_bar:
+                print('Самый близкий бар: "{0}"'.format(name_closest_bar))
             else:
                 print('Введены неверные координаты')
         else:
