@@ -35,7 +35,7 @@ def get_biggest_bar(bars):
         bars,
         key=lambda x: x['properties']['Attributes']['SeatsCount']
     )
-    return biggest_bar['properties']
+    return biggest_bar
 
 
 def get_smallest_bar(bars):
@@ -43,7 +43,7 @@ def get_smallest_bar(bars):
         bars,
         key=lambda x: x['properties']['Attributes']['SeatsCount']
     )
-    return small_bars['properties']
+    return small_bars
 
 
 def get_distance_bar(longitude, latitude, longitude_bar, latitude_bar):
@@ -73,7 +73,7 @@ def get_closest_bar(bars, longitude, latitude):
                 x['geometry']['coordinates'][1]
             )
         )
-        return closest_bar['properties']
+        return closest_bar
     else:
         return None
 
@@ -82,13 +82,13 @@ if __name__ == '__main__':
     argv = get_argv()
     bars = load_data(argv.file)
     if bars:
-        name_smallest_bar = get_smallest_bar(bars)['Attributes']['Name']
-        name_biggest_bar = get_biggest_bar(bars)['Attributes']['Name']
+        name_smallest_bar = get_smallest_bar(bars)['properties']['Attributes']['Name']
+        name_biggest_bar = get_biggest_bar(bars)['properties']['Attributes']['Name']
         print('Самый маленький бар: "{0}"'.format(name_smallest_bar))
         print('Cамый большой бар: "{0}"'.format(name_biggest_bar))
         if argv.location:
             longitude, latitude = argv.location
-            name_closest_bar = get_closest_bar(bars, longitude, latitude)['Attributes']['Name']
+            name_closest_bar = get_closest_bar(bars, longitude, latitude)['properties']['Attributes']['Name']
             if name_closest_bar:
                 print('Самый близкий бар: "{0}"'.format(name_closest_bar))
             else:
